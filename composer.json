@@ -1,0 +1,43 @@
+{
+    "name": "gravitatenz/fta-cache",
+    "description": "Simple twig extension for adding cache headers",
+    "type": "library",
+    "license": "BSD-3-Clause",
+    "prefer-stable" : true,
+    "minimum-stability" : "dev",
+    "authors": [
+        {
+            "name": "John Lennard",
+            "email": "john@yakmoo.se"
+        }
+    ],
+    "require": {
+        "php": ">=7.4.0",
+        "symfony/http-foundation": ">=4.4",
+        "twig/twig": ">=3.0",
+        "symfony/event-dispatcher": ">=4.4",
+        "symfony/http-kernel": ">=4.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "roave/security-advisories": "dev-master",
+        "symfony/test-pack": "^1.0"
+    },
+    "suggest": {
+    },
+    "autoload": {
+        "psr-4": {
+            "GravitateNZ\\fta\\cache\\" : "src/"
+          }
+    },
+    "autoload-dev": {
+      "psr-4": {
+        "GravitateNZ\\fta\\csp\\Tests\\": "tests/"
+      }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "2.1.x-dev"
+        }
+    }
+}
