@@ -37,8 +37,46 @@ class CacheControlListener implements EventSubscriberInterface
             $response->setSharedMaxAge((int) $sMaxAge);
         }
 
-        if ("" !== $surrogateMaxAge = $request->attributes->getDigits('_surrogate_max_age')) {
-            $response->headers->set('Surrogate-Control', "max-age=$surrogateMaxAge");
+        if ($request->attributes->getBoolean('_no-cache')) {
+            $response->headers->addCacheControlDirective('no-cache', true);
+        }
+
+        if ($request->attributes->getBoolean('_no-store')) {
+            $response->headers->addCacheControlDirective('no-store', true);
+        }
+
+        if ($request->attributes->getBoolean('_must-revalidate')) {
+            $response->headers->addCacheControlDirective('must-revalidate', true);
+        }
+
+        $surrogateMaxAge = $request->attributes->getDigits('_surrogate_maxage');
+        $surrogateNoStore = $request->attributes->getBoolean('_surrogate_no-store');
+        $surrogateNoCache = $request->attributes->getBoolean('_surrogate_no-cache');
+        $surrogateMustRevalidate = $request->attributes->getBoolean('_surrogate_must-revalidate');
+
+
+        if ($surrogateNoStore || $surrogateMaxAge >= 0 || $surrogateNoCache || $surrogateMustRevalidate) {
+
+            $surrogateOptions = [];
+            if ($surrogateMaxAge >= 0) {
+                $surrogateOptions[] = "max-age=$surrogateMaxAge";
+            }
+
+
+            if ($surrogateNoStore) {
+                $surrogateOptions[] = "no-store";
+            }
+
+            if ($surrogateNoCache) {
+                $surrogateOptions[] = "no-cache";
+            }
+
+            if ($surrogateMustRevalidate) {
+                $surrogateOptions[] = "must-revalidate";
+            }
+
+            $response->headers->set('Surrogate-Control', implode(', ', $surrogateOptions));
+
         }
 
         if ($surrogateKey = $request->attributes->get('_surrogate_keys')) {

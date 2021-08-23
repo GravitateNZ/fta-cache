@@ -46,9 +46,9 @@ class ListenerTests extends TestCase
     {
         $request = $this->requestStack->getMasterRequest();
         $response = new Response('', 200, []);
+        $response->headers->remove('cache-control');
         return new ResponseEvent($this->kernel, $request, HttpKernelInterface::MAIN_REQUEST, $response);
     }
-
 
     public function testSetMaxAge(): void
     {
@@ -64,7 +64,6 @@ class ListenerTests extends TestCase
         $this->assertStringContainsString("max-age=0", $event->getResponse()->headers->get('cache-control'));
     }
 
-
     public function testSharedMaxAge(): void
     {
 
@@ -79,7 +78,6 @@ class ListenerTests extends TestCase
         $this->assertStringContainsString("s-maxage=0", $event->getResponse()->headers->get('cache-control'));
 
     }
-
 
     public function testSetPublic(): void
     {
@@ -124,7 +122,6 @@ class ListenerTests extends TestCase
 
     }
 
-
     public function testSurrogateMaxAge(): void
     {
         $this->extension->setSurrogateMaxAge(0);
@@ -133,16 +130,50 @@ class ListenerTests extends TestCase
         $event = $this->getEvent();
         $subscriber->onKernelResponse($event);
 
-        $this->assertStringContainsString("max-age=0", $event->getResponse()->headers->get('surrogate-control'));
-
-
+        $this->assertEquals("max-age=0", $event->getResponse()->headers->get('surrogate-control'));
     }
+
+    public function testSurrogateNoCache(): void
+    {
+        $this->extension->surrogateNoCache();
+
+        $subscriber = new CacheControlListener();
+        $event = $this->getEvent();
+        $subscriber->onKernelResponse($event);
+
+        $this->assertEquals("no-cache", $event->getResponse()->headers->get('surrogate-control'));
+    }
+
+    public function testSurrogateNoStore(): void
+    {
+        $this->extension->surrogateNoStore();
+
+        $subscriber = new CacheControlListener();
+        $event = $this->getEvent();
+        $subscriber->onKernelResponse($event);
+
+        $this->assertEquals("no-store", $event->getResponse()->headers->get('surrogate-control'));
+    }
+
+    public function testSurrogateMustRevalidate(): void
+    {
+        $this->extension->surrogateMustRevalidate();
+
+        $subscriber = new CacheControlListener();
+        $event = $this->getEvent();
+        $subscriber->onKernelResponse($event);
+
+        $this->assertEquals("must-revalidate", $event->getResponse()->headers->get('surrogate-control'));
+    }
+
+
     public function testSubscribedEvents(): void
     {
         $this->assertEquals(array(KernelEvents::RESPONSE => 'onKernelResponse'), CacheControlListener::getSubscribedEvents());
     }
 
-    public function testDisableAutoCacheControl(): void{
+    public function testDisableAutoCacheControl(): void
+    {
         $this->extension->disableAutoCacheControl();
 
         $subscriber = new CacheControlListener();
@@ -150,5 +181,57 @@ class ListenerTests extends TestCase
         $subscriber->onKernelResponse($event);
 
         $this->assertTrue($event->getResponse()->headers->has(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER));
+    }
+
+
+    public function testNoCache(): void
+    {
+        $this->extension->disableAutoCacheControl();
+        $this->extension->noCache();
+
+        $subscriber = new CacheControlListener();
+        $event = $this->getEvent();
+        $subscriber->onKernelResponse($event);
+
+        $this->assertEquals("no-cache, private", $event->getResponse()->headers->get('cache-control'));
+
+    }
+
+    public function testNoStore(): void
+    {
+        $this->extension->noStore();
+
+        $subscriber = new CacheControlListener();
+        $event = $this->getEvent();
+        $subscriber->onKernelResponse($event);
+
+        $this->assertEquals("no-store, private", $event->getResponse()->headers->get('cache-control'));
+
+    }
+
+    public function testMustRevalidate(): void
+    {
+        $this->extension->mustRevalidate();
+
+        $subscriber = new CacheControlListener();
+        $event = $this->getEvent();
+        $subscriber->onKernelResponse($event);
+
+        $this->assertEquals("must-revalidate, private", $event->getResponse()->headers->get('cache-control'));
+    }
+
+    public function testDoNotCache(): void
+    {
+        $this->extension->doNotCache();
+
+        $subscriber = new CacheControlListener();
+        $event = $this->getEvent();
+        $subscriber->onKernelResponse($event);
+
+        $this->assertTrue($event->getResponse()->headers->has(AbstractSessionListener::NO_AUTO_CACHE_CONTROL_HEADER));
+        $this->assertEquals("max-age=0, no-store, private", $event->getResponse()->headers->get('cache-control'));
+        $this->assertEquals("max-age=0, no-store, private", $event->getResponse()->headers->get('cache-control'));
+        $this->assertEquals("max-age=0, no-store", $event->getResponse()->headers->get('surrogate-control'));
+
     }
 }
