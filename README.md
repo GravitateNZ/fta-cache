@@ -6,6 +6,7 @@ Simple twig extension to allow templates to set caching headers
 {% do setPrivate() %}
 {% do setPublic() %}
 {% do setMaxAge(1000) %}
+{% do doNotCache() %}
 ```
 
 or
